@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>获取地理位置</title>
+</head>
+<body>
+    <button id="getLocation">获取地理位置</button>
+    <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
+    <script>
+        // 微信配置
+        wx.config({
+            debug: false,
+            appId: 'your_app_id',
+            timestamp: 'your_timestamp',
+            nonceStr: 'your_nonceStr',
+            signature: 'your_signature',
+            jsApiList: ['getLocation']
+        });
+
+        wx.ready(function () {
+            document.getElementById('getLocation').addEventListener('click', function () {
+                wx.getLocation({
+                    type: 'wgs84',
+                    success: function (res) {
+                        var latitude = res.latitude;
+                        var longitude = res.longitude;
+                        // 发送经纬度到服务器
+                        fetch('/getWeather?latitude=' + latitude + '&longitude=' + longitude)
+                           .then(response => response.json())
+                           .then(data => {
+                                console.log(data);
+                            });
+                    },
+                    fail: function (res) {
+                        console.error('获取地理位置失败:', res);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
