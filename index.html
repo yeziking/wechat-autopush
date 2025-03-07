@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每日播报</title>
+    <style>
+        /* 基础样式 */
+        body {
+            font-family: '微软雅黑', sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 15px;
+            background-color: #f5f5f5;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .weather-info { color: #1890ff; }
+        .news-item { 
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 3px solid #1890ff;
+            background: #f8f9fa;
+        }
+
+        .loading { text-align: center; padding: 20px; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>今日播报</h1>
+        
+        <!-- 天气信息区域 -->
+        <div id="weather" class="loading">
+            天气信息加载中...
+        </div>
+
+        <!-- 新闻信息区域 -->
+        <div id="news" class="loading">
+            新闻加载中...
+        </div>
+    </div>
+
+    <script>
+        // 配置参数 (需替换成你的API Key)
+        const API_CONFIG = {
+            weather: {
+                key: '你的天行天气API_KEY', // 替换1
+                url: 'https://apis.tianapi.com/tianqi/index?key='
+            },
+            news: {
+                key: '你的天行新闻API_KEY', // 替换2
+                url: 'https://apis.tianapi.com/topnews/index?key='
+            }
+        };
+
+        // 获取天气数据
+        async function fetchWeather() {
+            try {
+                const response = await fetch(`${API_CONFIG.weather.url}${API_CONFIG.weather.key}&city=北京`);
+                const data = await response.json();
+                
+                if(data.code === 200) {
+                    const weather = data.result;
+                    document.getElementById('weather').innerHTML = `
+                        <h2 class="weather-info">${weather.area} · ${weather.weather}</h2>
+                        <p>温度：${weather.lowest} ~ ${weather.highest}℃</p>
+                        <p>湿度：${weather.humidity}% | 风力：${weather.windpower}</p>
+                    `;
+                } else {
+                    showError('天气', data.msg);
+                }
+            } catch (err) {
+                showError('天气', err.message);
+            }
+        }
+
+        // 获取新闻数据
+        async function fetchNews() {
+            try {
+                const response = await fetch(`${API_CONFIG.news.url}${API_CONFIG.news.key}`);
+                const data = await response.json();
+                
+                if(data.code === 200) {
+                    let newsHtml = '';
+                    data.result.newslist.slice(0,5).forEach(item => {
+                        newsHtml += `
+                            <div class="news-item">
+                                <a href="${item.url}" target="_blank">${item.title}</a>
+                                <p>${item.description}</p>
+                            </div>
+                        `;
+                    });
+                    document.getElementById('news').innerHTML = newsHtml;
+                } else {
+                    showError('新闻', data.msg);
+                }
+            } catch (err) {
+                showError('新闻', err.message);
+            }
+        }
+
+        // 错误处理
+        function showError(type, msg) {
+            const elem = document.getElementById(type === '天气' ? 'weather' : 'news');
+            elem.classList.remove('loading');
+            elem.classList.add('error');
+            elem.innerHTML = `${type}数据获取失败：${msg}`;
+        }
+
+        // 页面加载时执行
+        window.onload = function() {
+            fetchWeather();
+            fetchNews();
+        };
+    </script>
+</body>
+</html>
